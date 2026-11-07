@@ -1,14 +1,15 @@
 //@version=6
-indicator("EMA Crossover + Universal Visual Bridge", overlay=true)
-fast = input.int(9, "Fast EMA")
-slow = input.int(21, "Slow EMA")
-ma1 = ta.ema(close, fast)
-ma2 = ta.ema(close, slow)
-plot(ma1, color=color.teal)
-plot(ma2, color=color.orange)
-bool emaBuy = ta.crossover(ma1, ma2)
-bool emaSell = ta.crossunder(ma1, ma2)
-// DROP-IN VISUAL BRIDGE (Pine Script v6), protocol v2.
+indicator("EMA Cross + Visual Bridge v0.3", overlay=true)
+fastLen = input.int(9, "Fast EMA", minval=1)
+slowLen = input.int(21, "Slow EMA", minval=1)
+fastMA = ta.ema(close, fastLen)
+slowMA = ta.ema(close, slowLen)
+plot(fastMA, "Fast EMA", color=color.teal)
+plot(slowMA, "Slow EMA", color=color.orange)
+bool emaBuy = ta.crossover(fastMA, slowMA)
+bool emaSell = ta.crossunder(fastMA, slowMA)
+
+// DROP-IN VISUAL BRIDGE (Pine Script v6), protocol v3.
 // Paste this BELOW your own indicator/strategy signal calculations.
 // Do not copy an extra //@version, indicator() or strategy() declaration.
 // EDIT ONLY THE FOUR CONDITION LINES BELOW for each new script.
@@ -23,18 +24,15 @@ bool bridgeCloseShort = false // TODO optional: close short condition
 int bridgeChannel = input.int(7, "Visual bridge channel", minval=0, maxval=255)
 string bridgeSymbolOverride = input.string("", "Bridge symbol override (blank = chart base+quote)")
 string bridgeSymbol = str.length(bridgeSymbolOverride) > 0 ? str.upper(bridgeSymbolOverride) : str.upper(syminfo.basecurrency + syminfo.currency)
-string bridgeTestAction = input.string("Off", "One-shot visual bridge test", options=["Off","OPEN_LONG","OPEN_SHORT","CLOSE_LONG","CLOSE_SHORT"])
+string bridgeTestAction = input.string("Off", "VISUAL TEST (never sends Binance orders)", options=["Off","TEST_LONG","TEST_SHORT","TEST_CLOSE_LONG","TEST_CLOSE_SHORT"])
 
 var int bridgeAction = 0
 var int bridgeSignalTime = 0
-var bool bridgeTestEmitted = false
+var int bridgeTestStamp = int(timenow / 1000)  // fixed at script load; input edits re-run the script
 
 if barstate.isconfirmed and not na(time_close)
     int incomingAction = 0
-    if barstate.isrealtime and not bridgeTestEmitted and bridgeTestAction != "Off"
-        incomingAction := bridgeTestAction == "OPEN_LONG" ? 1 : bridgeTestAction == "OPEN_SHORT" ? 2 : bridgeTestAction == "CLOSE_LONG" ? 3 : 4
-        bridgeTestEmitted := true
-    else if bridgeOpenLong
+    if bridgeOpenLong
         incomingAction := 1
     else if bridgeOpenShort
         incomingAction := 2
@@ -46,7 +44,14 @@ if barstate.isconfirmed and not na(time_close)
         bridgeAction := incomingAction
         bridgeSignalTime := int(time_close / 1000)
 
-// Visual protocol v2: 19 colored cells, left-to-right:
+// Test codes 5-8 are displayed immediately after changing this Pine input.
+// They can be decoded by Chrome but must NEVER execute exchange orders.
+// The stamp stays constant through realtime updates to avoid repeated test signals.
+if barstate.islast and bridgeTestAction != "Off"
+    bridgeAction := bridgeTestAction == "TEST_LONG" ? 5 : bridgeTestAction == "TEST_SHORT" ? 6 : bridgeTestAction == "TEST_CLOSE_LONG" ? 7 : 8
+    bridgeSignalTime := bridgeTestStamp
+
+// Visual protocol v3: 19 colored cells, left-to-right:
 // [MAGENTA start][CYAN start][version][action][8 hex nibbles UNIX seconds]
 // [2 hex nibbles channel][4 symbol hash hex nibbles][1 checksum]. No OCR/TV alerts.
 // The 16-color palette MUST match extension/decoder.js exactly.
@@ -86,7 +91,7 @@ var table bridgeDisplay = table.new(position.top_right, 19, 1, frame_width=0, bo
 
 if barstate.islast
     int contractHash = bridgeSymbolFingerprint(bridgeSymbol)
-    int checksum = (2 + bridgeAction + bridgeHexNibble(bridgeChannel, 1) + bridgeHexNibble(bridgeChannel, 0)) % 16
+    int checksum = (3 + bridgeAction + bridgeHexNibble(bridgeChannel, 1) + bridgeHexNibble(bridgeChannel, 0)) % 16
     for i = 0 to 7
         checksum := (checksum + bridgeHexNibble(bridgeSignalTime, i)) % 16
     for i = 0 to 3
@@ -95,7 +100,7 @@ if barstate.islast
     for col = 0 to 18
         int code = 0
         if col == 2
-            code := 2
+            code := 3
         else if col == 3
             code := bridgeAction
         else if col >= 4 and col <= 11
