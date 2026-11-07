@@ -1,0 +1,12 @@
+TV Futures Bridge v0.4 — Quick install
+
+1. Disable/remove v0.3 and other copies in chrome://extensions.
+2. Turn Developer mode ON and click Load unpacked.
+3. Choose this "extension" folder containing manifest.json.
+4. Add the included Pine script to a visible TradingView chart.
+5. In popup: select Observe/Demo/Live; enter symbol (default XRPUSDT), USDT notional and leverage (1–100x).
+6. Demo/Live: enter matching Binance Futures API credentials; Save credentials & test connection.
+7. Start automatic trading, or use manual Buy/Long and Sell/Short to test orders.
+8. For chart detection, expand Chart diagnostics & activity -> Scan chart now.
+
+See ../README.md for safety limitations and recovery steps.
