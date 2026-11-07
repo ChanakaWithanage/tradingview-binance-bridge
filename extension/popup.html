@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TV Futures Bridge</title><link rel="stylesheet" href="popup.css">
+</head><body>
+  <header class="header">
+    <div class="brand"><span class="brand-icon">↗</span><div><h1>TV Futures Bridge</h1><span class="sub">TradingView → Binance USDT-M Futures</span></div></div>
+    <span id="runningPill" class="pill">Stopped</span>
+  </header>
+  <main>
+    <label class="label">Trading mode
+      <select id="execution">
+        <option value="observe">Observe only</option>
+        <option value="demo">Demo trading</option>
+        <option value="live">Live trading</option>
+      </select>
+    </label>
+    <div class="row fields">
+      <label class="label">Symbol<input id="symbol" value="XRPUSDT" spellcheck="false" autocomplete="off"></label>
+      <label class="label">Position size <small>USDT</small><input id="size" type="number" min="0.01" step="0.01" value="10"></label>
+      <label class="label short">Leverage <small>1–100x</small><input id="leverage" type="number" min="1" max="100" step="1" value="2"></label>
+    </div>
+    <p class="exposure" id="exposure">10 USDT position • approximately 5 USDT initial margin at 2x</p>
+    <section class="keys" id="keysSection">
+      <div class="line-head"><h2>Binance API credentials</h2><span id="keyStatus" class="tiny">Not connected</span></div>
+      <label class="label">API key<input id="apiKey" type="password" placeholder="Paste API key" autocomplete="off" spellcheck="false"></label>
+      <label class="label">Secret key<input id="secret" type="password" placeholder="Paste API secret" autocomplete="off" spellcheck="false"></label>
+      <button id="connect" class="button light" type="button">Save credentials & test connection</button>
+      <p id="connectResult" class="feedback small">Keys are kept in browser session memory, not inside Pine Script.</p>
+    </section>
+    <p id="liveNote" class="caution" hidden>Live mode uses real funds. The first Start/Trade action asks for confirmation. No protective stop-loss is created.</p>
+    <div class="row action-row"><button id="start" class="button primary">▶ Start automatic trading</button><button id="stop" class="button ghost">Stop</button></div>
+    <div class="status"><span class="status-dot" id="statusDot"></span><span id="status">Ready. Open TradingView before starting.</span></div>
+    <section class="manual">
+      <div class="line-head"><h2>Manual test</h2><span class="tiny">Uses selected mode</span></div>
+      <div class="row"><button id="openLong" class="button buy">Buy / Long</button><button id="openShort" class="button sell">Sell / Short</button></div>
+      <details><summary>Close position</summary><div class="row minor"><button id="closeLong" class="button ghost">Close Long</button><button id="closeShort" class="button ghost">Close Short</button></div></details>
+    </section>
+    <div id="lockPanel" class="lock" hidden><b>Previous order needs checking</b><p id="lockText"></p><div class="row"><button id="checkLock" class="button light">Check Binance</button><button id="clearLock" class="button ghost">Clear after review</button></div></div>
+    <details class="diagnostics"><summary>Chart diagnostics & activity</summary>
+      <div class="row"><button id="scan" class="button light">Scan chart now</button><label class="label channel">Channel<input id="channel" type="number" min="0" max="255" value="7"></label></div>
+      <p id="scanResult" class="feedback small">No chart scan yet.</p>
+      <ul id="history" class="history"></ul>
+    </details>
+    <p class="footer">Chrome and the TradingView chart must remain open and visible. If an order result is uncertain, the bridge pauses rather than repeating it.</p>
+  </main>
+  <script src="popup.js"></script>
+</body></html>
